@@ -1,67 +1,163 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Quiz Platform</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .quiz-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            text-align: center;
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option {
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .option:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .timer {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #ff5722;
+        }
+        .result {
+            font-size: 1.5em;
+            color: #4caf50;
+        }
+        .restart-btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .restart-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Online Quiz Platform</h1>
-        <nav>
-            <ul>
-                <li><a href="#create-quiz">Create Quiz</a></li>
-                <li><a href="#take-quiz">Take Quiz</a></li>
-                <li><a href="#leaderboard">Leaderboard</a></li>
-                <li><a href="#login">Login</a></li>
-            </ul>
-        </nav>
-    </header>
-    
-    <section id="create-quiz">
-        <h2>Create a Quiz</h2>
-        <form id="quiz-form">
-            <label for="question">Question:</label>
-            <input type="text" id="question" required>
-            <label for="options">Options (comma separated):</label>
-            <input type="text" id="options" required>
-            <label for="answer">Correct Answer:</label>
-            <input type="text" id="answer" required>
-            <button type="submit">Add Question</button>
-        </form>
-    </section>
-    
-    <section id="take-quiz">
-        <h2>Take a Quiz</h2>
-        <button onclick="startQuiz()">Start Quiz</button>
-        <div id="quiz-container"></div>
-    </section>
-    
-    <section id="leaderboard">
-        <h2>Leaderboard</h2>
-        <ul id="leaderboard-list">
-            <li>1. User A - 95%</li>
-            <li>2. User B - 90%</li>
-            <li>3. User C - 85%</li>
-        </ul>
-    </section>
-    
-    <section id="login">
-        <h2>Login</h2>
-        <form>
-            <label for="username">Username:</label>
-            <input type="text" id="username" required>
-            <label for="password">Password:</label>
-            <input type="password" id="password" required>
-            <button type="submit">Login</button>
-        </form>
-    </section>
-    
-    <footer>
-        <p>&copy; 2025 Online Quiz Platform. All rights reserved.</p>
-    </footer>
-    
-    <script src="script.js"></script>
+    <div class="quiz-container">
+        <div class="timer">Time Left: <span id="time">30</span>s</div>
+        <div class="question">Question will appear here</div>
+        <div class="options"></div>
+        <div class="result" style="display: none;">Your score: <span id="score">0</span></div>
+        <button class="restart-btn" style="display: none;">Restart Quiz</button>
+    </div>
+    <script>
+        const quizData = [
+            {
+                question: "What is the capital of France?",
+                options: ["Berlin", "Madrid", "Paris", "Lisbon"],
+                answer: "Paris"
+            },
+            {
+                question: "Which language is used for web development?",
+                options: ["Python", "HTML", "Java", "C++"],
+                answer: "HTML"
+            },
+            {
+                question: "Who wrote 'Hamlet'?",
+                options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"],
+                answer: "William Shakespeare"
+            }
+        ];
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 30;
+        let timerInterval;
+        const timerEl = document.getElementById('time');
+        const questionEl = document.querySelector('.question');
+        const optionsEl = document.querySelector('.options');
+        const resultEl = document.querySelector('.result');
+        const scoreEl = document.getElementById('score');
+        const restartBtn = document.querySelector('.restart-btn');
+        function loadQuestion() {
+            if (currentQuestion >= quizData.length) {
+                endQuiz();
+                return;
+            }
+            clearInterval(timerInterval);
+            timeLeft = 30; 
+            timerEl.textContent = timeLeft;
+            startTimer(); 
+            const currentQuiz = quizData[currentQuestion];
+            questionEl.textContent = currentQuiz.question;
+            optionsEl.innerHTML = '';
+            currentQuiz.options.forEach(option => {
+                const button = document.createElement('button');
+                button.classList.add('option');
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option);
+                optionsEl.appendChild(button);
+            });
+        }
+        function checkAnswer(selectedOption) {
+            if (selectedOption === quizData[currentQuestion].answer) {
+                score++;
+            }
+            currentQuestion++;
+            loadQuestion();
+        }
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endQuiz();
+                }
+            }, 1000);
+        }
+        function endQuiz() {
+            clearInterval(timerInterval);
+            questionEl.style.display = 'none';
+            optionsEl.style.display = 'none';
+            resultEl.style.display = 'block';
+            scoreEl.textContent = score;
+            restartBtn.style.display = 'block';
+        }
+        restartBtn.addEventListener('click', () => {
+            currentQuestion = 0;
+            score = 0;
+            timeLeft = 30;
+            timerEl.textContent = timeLeft;
+            questionEl.style.display = 'block';
+            optionsEl.style.display = 'block';
+            resultEl.style.display = 'none';
+            restartBtn.style.display = 'none';
+            loadQuestion();
+        });
+        loadQuestion();
+    </script>
 </body>
 </html>
